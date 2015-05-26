@@ -9,30 +9,107 @@ require "nokogiri"
 module Npbs
   # Your code goes here...
   class NPB
-    attr_reader :base_url
-    attr_reader :page_path
+    attr_reader :base_url, :path
     def initialize
       @base_url = "http://bis.npb.or.jp";
-      @page_path = "";
+      @path = "";
       # http://bis.npb.or.jpだけを対象にするので、文字コードは決め打ち
       @charset = "Shift-jis"
     end
 
-    def get_html
-      URI.parse(@base_url+@page_path).read
+    def get_doc(ext_path=nil)
+      Nokogiri::HTML(get_html(ext_path), nil, @charset)
+    end
+
+    def get_html(ext_path=nil)
+      path = ext_path.nil? ? @path : ext_path
+      URI.parse(@base_url + path).read
     end
 
   end
 
-  class Game < NPB
+  class Player < NPB
+    attr_reader :name, :path, :first_name, :last_name, :first_name_kane, :last_name_kana,
+                :birthday, :height, :weight, :high_school, :college, :company
+    def initialize(name, path)
+      super()
+      @name = name
+      @path = path
+    end
+    def get
+      doc = get_doc
+      name = @name.split(' ')
+      @first_name = name[0]
+      @last_name = name[1]
+      doc.css('#registerdivCareer').each do |prof|
+        name_kana = prof.css("tr:first-child td").inner_text.split('・')
+        @first_name_kana = name_kana[0]
+        @last_name_kana = name_kana[1]
+        data = prof.css('tr:nth-child(2) td').inner_text.split('　')
+        data.delete('')
+        @birthday = Date.strptime(data[0],'%Y年%m月%d日生')
+        @height = data[1].match(/[0-9]{3,}/).to_s
+        @weight = data[2].match(/[0-9]{2,3}/).to_s
+        history = prof.css('tr:nth-child(3) td').inner_text.split(' - ')
+        history.delete('')
+        @high_school =  history[0]
+        if history.length == 2 && /大$/ === history[1] then
+          @college = history[1]
+        elsif history.legth == 2 then
+          @company = history[1]
+        end
+      end
+    end
+  end
+
+  class TeamsPlayers < NPB
+    attr_reader :teams
     def initialize
       super
-      @page_path = "/#{Date.today.year}/games/"
+      @path = "/players/"
+      @teams = []
+    end
+    def get
+      get_doc.css(".playerTeamsub").each do |node|
+        node.css("tr:not(:first-child)").each do |team|
+          name =  team.css('a').inner_text
+          path =  team.css('a').first.attributes.first[1].value
+          @teams << TeamPlayers.new(name, path)
+        end
+      end
+      @teams
+    end
+  end
+
+  class TeamPlayers < NPB
+    attr_reader :name, :path, :players
+    def initialize(name, path)
+      super()
+      @name = name
+      @path = path
+      @players = []
+    end
+    def get
+      get_doc.css('.rosterPlayer').each do |node|
+        node.css('a').each do |p|
+          name = p.inner_text.gsub(/　/,' ')
+          next if name =~ /※/
+          path = p.attributes.first[1].value
+          @players << Player.new(name,path)
+        end
+      end
+      @players
+    end
+  end
+
+  class Matches < NPB
+    def initialize
+      super
+      @path = "/#{Date.today.year}/games/"
     end
     def today
-      doc = Nokogiri::HTML.parse(get_html, nil, @charset)
       result = []
-      doc.css(".contentsgame").each do |node|
+      get_doc.css(".contentsgame").each do |node|
         node.css("tr:nth-child(odd)").each do |game|
 
           h_team = game.css("td:nth-child(2)").inner_text.gsub(/(\s|　)+/, '')
@@ -41,8 +118,8 @@ module Npbs
           v_score = game.css("td:nth-child(5)").inner_text.gsub(/(\s|　)+/, '')
           v_team = game.css("td:nth-child(6)").inner_text.gsub(/(\s|　)+/,'')
 
-          result << Match.new(Team.new(h_team, h_score),
-                              Team.new(v_team, v_score))
+          result << Match.new(TeamResult.new(h_team, h_score),
+                              TeamResult.new(v_team, v_score))
         end
       end
       result
@@ -65,7 +142,7 @@ module Npbs
     end
   end
 
-  class Team
+  class TeamResult
     attr_reader :name, :score
     def initialize(name, score)
       @name = name
