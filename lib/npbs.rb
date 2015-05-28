@@ -17,11 +17,11 @@ module Npbs
       @charset = "Shift-jis"
     end
 
-    def get_doc(ext_path=nil)
+    def fetch_doc(ext_path=nil)
       Nokogiri::HTML(get_html(ext_path), nil, @charset)
     end
 
-    def get_html(ext_path=nil)
+    def fetch_html(ext_path=nil)
       path = ext_path.nil? ? @path : ext_path
       URI.parse(@base_url + path).read
     end
@@ -36,8 +36,8 @@ module Npbs
       @name = name
       @path = path
     end
-    def get
-      doc = get_doc
+    def fetch
+      doc = fetch_doc
       name = @name.split(' ')
       @first_name = name[0]
       @last_name = name[1]
@@ -69,8 +69,8 @@ module Npbs
       @path = "/players/"
       @teams = []
     end
-    def get
-      get_doc.css(".playerTeamsub").each do |node|
+    def fetch
+      fetch_doc.css(".playerTeamsub").each do |node|
         node.css("tr:not(:first-child)").each do |team|
           name =  team.css('a').inner_text
           path =  team.css('a').first.attributes.first[1].value
@@ -89,7 +89,7 @@ module Npbs
       @path = path
       @players = []
     end
-    def get
+    def fetch
       get_doc.css('.rosterPlayer').each do |node|
         node.css('a').each do |p|
           name = p.inner_text.gsub(/　/,' ')
