@@ -18,7 +18,7 @@ module Npbs
     end
 
     def fetch_doc(ext_path=nil)
-      Nokogiri::HTML(get_html(ext_path), nil, @charset)
+      Nokogiri::HTML(fetch_html(ext_path), nil, @charset)
     end
 
     def fetch_html(ext_path=nil)
@@ -90,7 +90,7 @@ module Npbs
       @players = []
     end
     def fetch
-      get_doc.css('.rosterPlayer').each do |node|
+      fetch_doc.css('.rosterPlayer').each do |node|
         node.css('a').each do |p|
           name = p.inner_text.gsub(/　/,' ')
           next if name =~ /※/
@@ -109,7 +109,7 @@ module Npbs
     end
     def today
       result = []
-      get_doc.css(".contentsgame").each do |node|
+      fetch_doc.css(".contentsgame").each do |node|
         node.css("tr:nth-child(odd)").each do |game|
 
           h_team = game.css("td:nth-child(2)").inner_text.gsub(/(\s|　)+/, '')
