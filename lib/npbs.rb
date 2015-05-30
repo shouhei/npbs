@@ -56,7 +56,7 @@ module Npbs
         @high_school =  history[0]
         if history.length == 2 && /大$/ === history[1] then
           @college = history[1]
-        elsif history.legth == 2 then
+        elsif history.length == 2 then
           @company = history[1]
         end
       end
