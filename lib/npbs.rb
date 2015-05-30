@@ -29,7 +29,7 @@ module Npbs
   end
 
   class Player < NPB
-    attr_reader :name, :path, :first_name, :last_name, :first_name_kane, :last_name_kana,
+    attr_reader :name, :path, :first_name, :last_name, :first_name_kana, :last_name_kana,
                 :birthday, :height, :weight, :high_school, :college, :company
     def initialize(name, path)
       super()
@@ -55,7 +55,7 @@ module Npbs
         @high_school =  history[0]
         if history.length == 2 && /大$/ === history[1] then
           @college = history[1]
-        elsif history.length == 2 then
+        elsif history.legth == 2 then
           @company = history[1]
         end
       end
