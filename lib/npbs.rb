@@ -46,6 +46,20 @@ module Npbs
         name_kana = prof.css("tr:first-child td").inner_text.split('・')
         @first_name_kana = name_kana[0]
         @last_name_kana = name_kana[1]
+        # 外人対応
+        if prof.css("tr:first-child td").inner_text =~ /[A-Z]/
+          name_data = prof.css("tr:first-child td").inner_text.split('　')
+          real_name = name_data[0].split('・')
+          @first_name = real_name[0]
+          @last_name = real_name[1]
+          kana = name_data[1].nil? ? name_data[0].split(/\s/) : name_data[1].split(/\s/)
+          @first_name_kana = kana[0].gsub(/（/,'')
+          @last_name_kana = kana[1].gsub(/）/,'')
+          if @first_name.nil? || @last_name.nil?
+            @first_name = @first_name_kana
+            @last_name = @last_name_kana
+          end
+        end
         data = prof.css('tr:nth-child(2) td').inner_text.split('　')
         data.delete('')
         @birthday = Date.strptime(data[0],'%Y年%m月%d日生')
