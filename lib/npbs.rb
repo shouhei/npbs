@@ -30,7 +30,7 @@ module Npbs
 
   class Player < NPB
     attr_reader :name, :path, :first_name, :last_name, :first_name_kana, :last_name_kana,
-                :birthday, :height, :weight, :high_school, :college, :company
+                :number, :birthday, :height, :weight, :high_school, :college, :company
     def initialize(name, path)
       super()
       @name = name
@@ -41,6 +41,7 @@ module Npbs
       name = @name.split(' ')
       @first_name = name[0]
       @last_name = name[1]
+      @number = doc.css('#registerdivtitle .registerNo').inner_text
       doc.css('#registerdivCareer').each do |prof|
         name_kana = prof.css("tr:first-child td").inner_text.split('・')
         @first_name_kana = name_kana[0]
