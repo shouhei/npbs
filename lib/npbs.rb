@@ -43,6 +43,9 @@ module Npbs
       @last_name = name[1]
       if @last_name.nil? && doc.css('.registerPlayer h1').inner_text.match('（')
         name = doc.css('.registerPlayer h1').inner_text.match('（.*）').to_s.split('　')
+        if name[1].nil?
+          name = doc.css('.registerPlayer h1').inner_text.match('（.*）').to_s.split('・')          
+        end
         @first_name = name[0].gsub('（','')
         @last_name = name[1].gsub('）','')
       end
