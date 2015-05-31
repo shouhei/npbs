@@ -41,7 +41,14 @@ module Npbs
       name = @name.split(' ')
       @first_name = name[0]
       @last_name = name[1]
+      if @last_name.nil? && doc.css('.registerPlayer h1').inner_text.match('（')
+        name = doc.css('.registerPlayer h1').inner_text.match('（.*）').to_s.split('　')
+        @first_name = name[0].gsub('（','')
+        @last_name = name[1].gsub('）','')
+      end
+
       @number = doc.css('#registerdivtitle .registerNo').inner_text
+
       doc.css('#registerdivCareer').each do |prof|
         name_kana = prof.css("tr:first-child td").inner_text.split('・')
         @first_name_kana = name_kana[0]
@@ -60,10 +67,10 @@ module Npbs
             @last_name = @last_name_kana
           end
         end
-        @first_name = @first_name.gsub(/(\s|　)/,' ')
-        @last_name = @last_name.gsub(/(\s|　)/,' ')
-        @first_name_kana = @first_name_kana.gsub(/(\s|　)/,' ')
-        @last_name_kana = @last_name_kana.gsub(/(\s|　)/,' ')
+        @first_name = @first_name.gsub(/(\s|　)/,' ').gsub(/^.*（/,'')
+        @last_name = @last_name.gsub(/(\s|　)/,' ').gsub(/）/,'')
+        @first_name_kana = @first_name_kana.gsub(/(\s|　)/,' ').gsub(/^.*（/,'')
+        @last_name_kana = @last_name_kana.gsub(/(\s|　)/,' ').gsub(/）/,'')
         data = prof.css('tr:nth-child(2) td').inner_text.split('　')
         data.delete('')
         @birthday = Date.strptime(data[0],'%Y年%m月%d日生')
